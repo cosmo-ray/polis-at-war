@@ -31,5 +31,15 @@
         "atk": 4,
         "type": 0,
         "wealth_cost": 5,
+    },
+    "Silver Mine": {
+        "type: 1,
+        "gen_wealth": 3,
+        "wealth_cost": 3
+    },
+    "Field": {
+        "type: 1,
+        "gen_wealth": 1,
+        "wealth_cost": 1
     }
 }
