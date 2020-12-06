@@ -1,0 +1,35 @@
+{
+    "Hoplite": {
+        "def": 4,
+        "atk": 4,
+        "type": 0,
+        "wealth_cost": 3,
+        "citizen_cost": 1
+    },
+    "Peltast": {
+        "def": 1,
+        "atk": 2,
+        "type": 0,
+        "wealth_cost": 1,
+        "citizen_cost": 1
+    },
+    "Hippeis": {
+        "def": 3,
+        "atk": 5,
+        "type": 0,
+        "wealth_cost": 4,
+        "citizen_cost": 1
+    },
+    "Balearic Slingers": {
+        "def": 1,
+        "atk": 1,
+        "type": 0,
+        "wealth_cost": 2,
+    },
+    "Numidian cavalry": {
+        "def": 2,
+        "atk": 4,
+        "type": 0,
+        "wealth_cost": 5,
+    }
+}
