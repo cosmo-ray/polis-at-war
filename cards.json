@@ -24,13 +24,13 @@
         "def": 1,
         "atk": 1,
         "type": 0,
-        "wealth_cost": 2,
+        "wealth_cost": 2
     },
     "Numidian cavalry": {
         "def": 2,
         "atk": 4,
         "type": 0,
-        "wealth_cost": 5,
+        "wealth_cost": 5
     },
     "Silver Mine": {
         "type: 1,
