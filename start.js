@@ -10,11 +10,16 @@ function paw_action(paw, eves)
 {
     let mouse_r = ywRectCreateInts(yeveMouseX(), yeveMouseY(), 1, 1)
     var p0 = yeGet(paw, "p0")
+    var p0d = yeGet(p0, "deck")
+    var p0h = yeGet(p0, "hand")
     var p1 = yeGet(paw, "p1")
 
-    if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	print("action", yent_to_str(mouse_r),
-	      ywCanvasCheckColisionsRectObj(mouse_r, yeGet(p0, "deck_c")))
+    if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1) &&
+	ywCanvasCheckColisionsRectObj(mouse_r, yeGet(p0, "deck_c"))) {
+	yePushBack(p0h, yeLast(p0d), yeLastKey(p0d))
+	yePopBack(p0d)
+	print("draw a card !!!", yeLen(p0d), yeLen(p0h),
+	      yeLastKey(p0d), yeLastKey(p0h))
     }
 }
 
