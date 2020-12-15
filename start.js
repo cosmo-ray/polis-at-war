@@ -1,9 +1,21 @@
 let CARD_W = 200
 let CARD_H = 300
 
+function i_at(paw, k)
+{
+    return yeGetInt(yeGet(paw, k))
+}
+
 function paw_action(paw, eves)
 {
-    print("action")
+    let mouse_r = ywRectCreateInts(yeveMouseX(), yeveMouseY(), 1, 1)
+    var p0 = yeGet(paw, "p0")
+    var p1 = yeGet(paw, "p1")
+
+    if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
+	print("action", yent_to_str(mouse_r),
+	      ywCanvasCheckColisionsRectObj(mouse_r, yeGet(p0, "deck_c")))
+    }
 }
 
 function mk_card_back(father, name)
@@ -39,32 +51,80 @@ function mk_card(card, card_name)
     return ret
 }
 
+function create_player(paw, name, deck)
+{
+    var p = yeCreateArray(paw, name)
+
+    var p_deck = yeCreateArray(p, "deck")
+    yeCreateArray(p, "hand")
+    yeCreateArray(p, "graveyard")
+    yeCreateArray(p, "field")
+
+    var cards = yeGet(paw, "cards")
+    var cp_deck = yeCreateCopy(deck)
+    var tot_cards = 0
+    for (i = 0; i < yeLen(cp_deck); ++i) {
+	var cards_nb = yeGet(cp_deck, i)
+	tot_cards += yeGetInt(cards_nb)
+    }
+
+    while (tot_cards > 0) {
+	var deck_idx = yuiRand() % yeLen(cp_deck)
+	var cards_nb = yeGet(cp_deck, deck_idx)
+
+	if (yeGetInt(cards_nb) > 0) {
+	    let cname = yeGetKeyAt(cp_deck, deck_idx)
+	    yeAddInt(cards_nb, -1)
+	    tot_cards--;
+	    yeCreateCopy(yeGet(cards, cname), p_deck, cname)
+	}
+    }
+    return p
+}
+
 function paw_init(paw)
 {
     yeCreateFunction(paw_action, paw, "action")
     yeCreateString("rgba: 255 255 255 255", paw, "background")
     var cards = ygFileToEnt(YJSON, "./cards.json")
     yePushBack(paw, cards, "cards")
+    var deck = ygFileToEnt(YJSON, "./greek_deck.json")
+
     print("cards:\n", yent_to_str(cards))
     ret = ywidNewWidget(paw, "canvas")
     for (i = 0; i < yeLen(cards); ++i) {
 	let img_path = yeGetKeyAt(cards, i) + ".png"
-	var imgt = mk_card(yeGet(cards, i), yeGetKeyAt(cards, i))
+	mk_card(yeGet(cards, i), yeGetKeyAt(cards, i))
 	var img = null
+	var imgt = yeGet(yeGet(cards, i), "texture")
 
-	if (i < 4)
-	    img = ywCanvasNewImgFromTexture(paw, 10, i * 110, imgt, null)
-	else
-	    img = ywCanvasNewImgFromTexture(paw, 120, (i - 4) * 110, imgt, null)
+	//img = ywCanvasNewImgFromTexture(paw, 10, i * 110, imgt, null)
+	//ywCanvasForceSize(img, sz)
 
-	var sz = ywSizeCreate(100 / 2, 160 / 2)
 
-	let back = mk_card_back()
-	ywCanvasNewImgFromTexture(paw, 170, 0, back, null)
-	print("force size: ", ywCanvasForceSize(img, sz))
- 	print(img_path)
-	print(yent_to_str(img), yent_to_str(sz))
     }
+    var wid_size = yeGet(paw, "wid-pix")
+    var wid_h = ywRectH(wid_size)
+    var wid_w = ywRectW(wid_size)
+    let back = mk_card_back()
+    var sz = ywSizeCreate(CARD_W / 2, CARD_H / 2)
+
+    yeCreateInt(0, paw, "turn")
+    yeCreateInt(0, paw, "phase")
+
+    var p = create_player(paw, "p1", deck)
+
+    var back_c = ywCanvasNewImgFromTexture(paw, 100, 0, back, null)
+    ywCanvasForceSize(back_c, sz)
+    ywCanvasRotate(back_c, 180)
+    yePushBack(p, back_c, "deck_c")
+
+    p = create_player(paw, "p0", deck)
+
+    back_c = ywCanvasNewImgFromTexture(paw, wid_w - 200,
+				       wid_h - CARD_H / 2, back, null)
+    ywCanvasForceSize(back_c, sz)
+    yePushBack(p, back_c, "deck_c")
 
     return ret;
 }
