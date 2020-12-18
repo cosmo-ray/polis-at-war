@@ -4,10 +4,16 @@ let CARD_H = 300
 var cp = null
 var cpd = null
 var cph = null
+var cpf = null
 
-function i_at(paw, k)
+function i_at(e, k)
 {
-    return yeGetInt(yeGet(paw, k))
+    return yeGetInt(yeGet(e, k))
+}
+
+function add_i_at(e, k, v)
+{
+    yeAddInt(yeGet(e, k), v)
 }
 
 function draw_card(paw)
@@ -55,6 +61,7 @@ function paw_action(paw, eves)
     }
     cpd = yeGet(cp, "deck")
     cph = yeGet(cp, "hand")
+    cpf = yeGet(cp, "field")
     var wealth = i_at(cp, "wealth")
     var citizens = i_at(cp, "citizens")
     var global_txt = "Turn: " + turn + " Player: " + cur_player +
@@ -65,7 +72,7 @@ function paw_action(paw, eves)
 	" Pop: " + i_at(p1, "citizens")
 
 
-    print(phase, " - ", turn)
+    print(phase, " - ", turn, wealth)
     if (phase == 0 && turn == 0) {
 	print("draw cards :)")
 	for(var i = 0; i < 5; ++i)
@@ -74,8 +81,9 @@ function paw_action(paw, eves)
 
     /* unkeep */
     if (phase == 0) {
-	yeAddInt(yeGet(cp, "wealth"), i_at(cp, "wealth-turn"))
-	yeAddInt(yeGet(paw, "phase"), 1)
+	add_i_at(cp, "wealth", i_at(cp, "wealth-turn"))
+	add_i_at(paw, "phase", 1)
+	print("p: ", i_at(paw, "phase"))
     }
 
     if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1) &&
@@ -94,14 +102,29 @@ function paw_action(paw, eves)
 
     if (hover_card != null && yeGet(hover_card, "hidx") != null) {
 	var scard = yeGet(cph, i_at(hover_card, "hidx"))
-	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	    let wc = i_at(scard, "wealth_cost")
-	    let cc = i_at(scard, "citizen_cost")
-	    print("must play card :)", wc, cc)
-	}
+
 	var txt = yeGet(scard, "texture")
 	var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
 	yePushBack(paw, hover_c, "hover_c")
+
+	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
+	    let wc = i_at(scard, "wealth_cost")
+	    let cc = i_at(scard, "citizen_cost")
+
+	    if (wc <= wealth) {
+		var hcan = yeGet(scard, "can")
+		ywCanvasRemoveObj(paw, hcan)
+		yeRemoveChildByStr(scard, "can")
+		yePushBack(cpf, scard)
+		yeRemoveChildByEntity(cph, scard)
+		print("oh: ", i_at(cp, "wealth"))
+		add_i_at(cp, "wealth", -1)
+		print(wealth, i_at(cp, "wealth"))
+	    } else {
+		global_txt += "\nNOT ENOUGH WEALTH :("
+	    }
+	    print("must play card :)", wc, cc)
+	}
     }
 
     ywCanvasRemoveObj(paw, yeGet(paw, "global_text"))
