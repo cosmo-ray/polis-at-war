@@ -15,7 +15,6 @@ function draw_card(paw)
     print("draw a card")
     var card = yeLast(cpd)
 
-    yeAddInt(yeGet(paw, "phase"), 1)
     yePushBack(cph, card, yeLastKey(cpd))
     yePopBack(cpd)
 
@@ -28,6 +27,16 @@ function draw_card(paw)
     yePushBack(card, can, "can")
     yeCreateInt(yeLen(cph) - 1, can, "hidx")
     ygUpdateScreen()
+}
+
+function phase_to_str(phase)
+{
+    print("phase: ", phase)
+    if (phase == 0)
+	return "unkeep phase"
+    else if (phase == 1)
+	return "main phase"
+    return "unknow phase"
 }
 
 function paw_action(paw, eves)
@@ -44,12 +53,23 @@ function paw_action(paw, eves)
     }
     cpd = yeGet(cp, "deck")
     cph = yeGet(cp, "hand")
+    var wealth = i_at(cp, "wealth")
+    var citizens = i_at(cp, "citizens")
+    var global_txt = "Turn: " + turn + " Player: " + cur_player +
+	" " + phase_to_str(phase) +
+	"\nWealth: " + wealth + " Pop: " + citizens
 
     print(phase, " - ", turn)
     if (phase == 0 && turn == 0) {
 	print("draw cards :)")
 	for(var i = 0; i < 5; ++i)
 	    draw_card(paw)
+    }
+
+    /* unkeep */
+    if (phase == 0) {
+	yeAddInt(yeGet(cp, "wealth"), 1)
+	yeAddInt(yeGet(paw, "phase"), 1)
     }
 
     if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1) &&
@@ -71,6 +91,11 @@ function paw_action(paw, eves)
 	var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
 	yePushBack(paw, hover_c, "hover_c")
     }
+
+    ywCanvasRemoveObj(paw, yeGet(paw, "global_text"))
+    yeRemoveChildByStr(paw, "global_text")
+    let global_txt_c = ywCanvasNewTextByStr(paw, 200, 0, global_txt)
+    yePushBack(paw, global_txt_c, "global_text")
     //print(yent_to_str(hover_hand))
 }
 
@@ -132,6 +157,8 @@ function create_player(paw, name, deck)
     yeCreateArray(p, "hand")
     yeCreateArray(p, "graveyard")
     yeCreateArray(p, "field")
+    yeCreateInt(0, p, "wealth")
+    yeCreateInt(20, p, "citizens")
 
     var cards = yeGet(paw, "cards")
     var cp_deck = yeCreateCopy(deck)
