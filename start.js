@@ -45,11 +45,13 @@ function paw_action(paw, eves)
     let phase = i_at(paw, "phase")
     let cur_player = i_at(paw, "cur_player")
     let turn = i_at(paw, "turn")
+    let p0 = yeGet(paw, "p0")
+    let p1 = yeGet(paw, "p1")
 
     if (cur_player == 0) {
-	cp = yeGet(paw, "p0")
+	cp = p0
     } else {
-	cp = yeGet(paw, "p1")
+	cp = p1
     }
     cpd = yeGet(cp, "deck")
     cph = yeGet(cp, "hand")
@@ -57,7 +59,11 @@ function paw_action(paw, eves)
     var citizens = i_at(cp, "citizens")
     var global_txt = "Turn: " + turn + " Player: " + cur_player +
 	" " + phase_to_str(phase) +
-	"\nWealth: " + wealth + " Pop: " + citizens
+	"\nGood Guy: Wealth: " + i_at(p0, "wealth") +
+	" Pop: " + i_at(p0, "citizens") +
+	"\nBad Guy: Wealth: " + i_at(p1, "wealth") +
+	" Pop: " + i_at(p1, "citizens")
+
 
     print(phase, " - ", turn)
     if (phase == 0 && turn == 0) {
@@ -68,7 +74,7 @@ function paw_action(paw, eves)
 
     /* unkeep */
     if (phase == 0) {
-	yeAddInt(yeGet(cp, "wealth"), 1)
+	yeAddInt(yeGet(cp, "wealth"), i_at(cp, "wealth-turn"))
 	yeAddInt(yeGet(paw, "phase"), 1)
     }
 
@@ -87,7 +93,13 @@ function paw_action(paw, eves)
     }
 
     if (hover_card != null && yeGet(hover_card, "hidx") != null) {
-	var txt = yeGet(yeGet(cph, i_at(hover_card, "hidx")), "texture")
+	var scard = yeGet(cph, i_at(hover_card, "hidx"))
+	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
+	    let wc = i_at(scard, "wealth_cost")
+	    let cc = i_at(scard, "citizen_cost")
+	    print("must play card :)", wc, cc)
+	}
+	var txt = yeGet(scard, "texture")
 	var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
 	yePushBack(paw, hover_c, "hover_c")
     }
@@ -96,7 +108,6 @@ function paw_action(paw, eves)
     yeRemoveChildByStr(paw, "global_text")
     let global_txt_c = ywCanvasNewTextByStr(paw, 200, 0, global_txt)
     yePushBack(paw, global_txt_c, "global_text")
-    //print(yent_to_str(hover_hand))
 }
 
 function mk_card_back(father, name)
@@ -158,6 +169,7 @@ function create_player(paw, name, deck)
     yeCreateArray(p, "graveyard")
     yeCreateArray(p, "field")
     yeCreateInt(0, p, "wealth")
+    yeCreateInt(1, p, "wealth-turn")
     yeCreateInt(20, p, "citizens")
 
     var cards = yeGet(paw, "cards")
