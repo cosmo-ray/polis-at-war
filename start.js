@@ -73,6 +73,13 @@ function is_card_playable(scard, wealth)
     return wc <= wealth
 }
 
+function print_card(paw, scard)
+{
+    var txt = yeGet(scard, "texture")
+    var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
+    yePushBack(paw, hover_c, "hover_c")
+}
+
 function paw_action(paw, eves)
 {
     let mouse_r = ywRectCreateInts(yeveMouseX(), yeveMouseY(), 1, 1)
@@ -81,10 +88,12 @@ function paw_action(paw, eves)
     let turn = i_at(paw, "turn")
     let p0 = yeGet(paw, "p0")
     let p1 = yeGet(paw, "p1")
+    var card_rotation = 0
 
     if (cur_player == 0) {
 	cp = p0
     } else {
+	card_rotation = 180
 	cp = p1
     }
     cpd = yeGet(cp, "deck")
@@ -115,6 +124,13 @@ function paw_action(paw, eves)
 
     /* unkeep */
     if (phase == 0) {
+	for (var i = 0; i < yeLen(cpf); ++i) {
+	    let card = yeGet(cpf, i)
+
+	    yeSetIntAt(card, "tap", 0)
+	    let can = yeGet(card, "can")
+	    ywCanvasRotate(can, card_rotation)
+	}
 	add_i_at(cp, "wealth", i_at(cp, "wealth-turn"))
 	add_i_at(paw, "phase", 1)
     }
@@ -156,9 +172,7 @@ function paw_action(paw, eves)
 	yeveMouseY() > 300) {
 	var scard = yeGet(cph, i_at(hover_card, "hidx"))
 
-	var txt = yeGet(scard, "texture")
-	var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
-	yePushBack(paw, hover_c, "hover_c")
+	print_card(paw, scard)
 
 	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
 	    let wc = i_at(scard, "wealth_cost")
@@ -195,6 +209,18 @@ function paw_action(paw, eves)
 	    print("must play card :)", wc, cc)
 	}
     } else if (hover_card != null && yeGet(hover_card, "fidx") != null) {
+	var scard = yeGet(cpf, i_at(hover_card, "fidx"))
+
+	print_card(paw, scard)
+	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
+	    var can = yeGet(scard, "can")
+
+	    if (i_at(scard, "tap") != 1) {
+		yeSetIntAt(scard, "tap", 1)
+		ywCanvasRotate(can, card_rotation + 90)
+		print("attack !!!!")
+	    }
+	}
 	print("fidx !!!!", i_at(hover_card, "fidx"))
     }
 
@@ -254,6 +280,7 @@ function mk_card(card, card_name)
 	ywTextureMergeText(ret, 5, 210, 70, 30,  income_txt)
     }
 
+    yeCreateInt(0, card, "tap")
     ywTextureMergeText(ret, 4, 2, CARD_W, 30, card_name)
     return ret
 }
