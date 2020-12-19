@@ -26,6 +26,7 @@ function draw_card(paw)
     var hidx = yePush(cph, card, yeLastKey(cpd))
     var x = 30
     var angle = 0
+    var wm = 1
     yePopBack(cpd)
 
     let txt = null
@@ -33,18 +34,19 @@ function draw_card(paw)
 	txt = yeGet(card, "texture")
 	angle = 10 * hidx - 30
     } else {
-	angle = 180
+	angle = 210 - 15 * hidx
 	txt = mk_card_back()
 	x += 400
+	wm = -1
     }
     print("X: ", x)
-    var can = ywCanvasNewImgFromTexture(paw, x * hidx,
+    var can = ywCanvasNewImgFromTexture(paw, x + 30 * hidx,
 					i_at(cp, "hand_y"), txt,
 					null)
     ywCanvasRotate(can, angle)
     ywCanvasForceSizeXY(can, CARD_W / 2, CARD_H / 2)
-    print("weight: ", hidx + 1)
-    ywCanvasSetWeight(paw, can, hidx + 1)
+    print("weight: ", x + 30 * hidx)
+    ywCanvasSetWeight(paw, can, (hidx + 1) * wm)
     yePushBack(card, can, "can")
     yeCreateInt(hidx, can, "hidx")
     ygUpdateScreen()
@@ -104,7 +106,7 @@ function paw_action(paw, eves)
 	if (turn == 0)
 	    for(var i = 0; i < 5; ++i) {
 		draw_card(paw)
-		yuiUsleep(10000)
+		yuiUsleep(30000)
 		ygUpdateScreen()
 	    }
 	else
@@ -115,6 +117,16 @@ function paw_action(paw, eves)
     if (phase == 0) {
 	add_i_at(cp, "wealth", i_at(cp, "wealth-turn"))
 	add_i_at(paw, "phase", 1)
+    }
+
+    if (i_at(paw, "cur_player") == 1) {
+	print("play le mechant")
+	add_i_at(paw, "turn", 1)
+	yeSetIntAt(paw, "phase", 0)
+	yeSetIntAt(paw, "cur_player", 0)
+	yuiUsleep(100000)
+	ygUpdateScreen()
+	return;
     }
 
     if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1) &&
@@ -132,7 +144,6 @@ function paw_action(paw, eves)
 
     for (var i = 0; (c = yeGet(cols, i)) != null; ++i) {
 	if (yeGet(c, "turn-end") && yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	    add_i_at(paw, "turn", 1)
 	    yeSetIntAt(paw, "phase", 0)
 	    yeSetIntAt(paw, "cur_player", 1)
 	    return
@@ -141,7 +152,8 @@ function paw_action(paw, eves)
 
     let hover_card = yeLast(cols)
 
-    if (hover_card != null && yeGet(hover_card, "hidx") != null) {
+    if (hover_card != null && yeGet(hover_card, "hidx") != null &&
+	yeveMouseY() > 300) {
 	var scard = yeGet(cph, i_at(hover_card, "hidx"))
 
 	var txt = yeGet(scard, "texture")
