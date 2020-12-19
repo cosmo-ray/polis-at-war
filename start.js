@@ -24,13 +24,24 @@ function draw_card(paw)
     if(yeNbElems(cph) > 7)
 	return
     var hidx = yePush(cph, card, yeLastKey(cpd))
+    var x = 30
+    var angle = 0
     yePopBack(cpd)
 
-    let txt = yeGet(card, "texture")
-    var can = ywCanvasNewImgFromTexture(paw, 30 * hidx,
+    let txt = null
+    if (i_at(paw, "cur_player") == 0) {
+	txt = yeGet(card, "texture")
+	angle = 10 * hidx - 30
+    } else {
+	angle = 180
+	txt = mk_card_back()
+	x += 400
+    }
+    print("X: ", x)
+    var can = ywCanvasNewImgFromTexture(paw, x * hidx,
 					i_at(cp, "hand_y"), txt,
 					null)
-    ywCanvasRotate(can, 10 * hidx - 30)
+    ywCanvasRotate(can, angle)
     ywCanvasForceSizeXY(can, CARD_W / 2, CARD_H / 2)
     print("weight: ", hidx + 1)
     ywCanvasSetWeight(paw, can, hidx + 1)
@@ -91,8 +102,11 @@ function paw_action(paw, eves)
 
     if (phase == 0) {
 	if (turn == 0)
-	    for(var i = 0; i < 5; ++i)
+	    for(var i = 0; i < 5; ++i) {
 		draw_card(paw)
+		yuiUsleep(10000)
+		ygUpdateScreen()
+	    }
 	else
 	    draw_card(paw)
     }
@@ -120,6 +134,7 @@ function paw_action(paw, eves)
 	if (yeGet(c, "turn-end") && yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
 	    add_i_at(paw, "turn", 1)
 	    yeSetIntAt(paw, "phase", 0)
+	    yeSetIntAt(paw, "cur_player", 1)
 	    return
 	}
     }
