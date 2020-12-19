@@ -5,6 +5,7 @@ var cp = null
 var cpd = null
 var cph = null
 var cpf = null
+var card_rotation = 0
 
 var non_playable_cause = null
 
@@ -23,6 +24,7 @@ function draw_card(paw)
     var card = yeLast(cpd)
     if(yeNbElems(cph) > 7)
 	return
+    var name = yeLastKey(cpd)
     var hidx = yePush(cph, card, yeLastKey(cpd))
     var x = 30
     var angle = 0
@@ -39,7 +41,6 @@ function draw_card(paw)
 	x += 400
 	wm = -1
     }
-    print("X: ", x)
     var can = ywCanvasNewImgFromTexture(paw, x + 30 * hidx,
 					i_at(cp, "hand_y"), txt,
 					null)
@@ -49,6 +50,7 @@ function draw_card(paw)
     ywCanvasSetWeight(paw, can, (hidx + 1) * wm)
     yePushBack(card, can, "can")
     yeCreateInt(hidx, can, "hidx")
+    yeCreateString(name, card, "name")
     ygUpdateScreen()
 }
 
@@ -63,6 +65,8 @@ function phase_to_str(phase)
 
 function is_card_playable(scard, wealth)
 {
+    if (scard == null)
+	return false
     let wc = i_at(scard, "wealth_cost")
 
     if (i_at(scard, "type") == 0 && yeNbElems(cpf) > 6) {
@@ -77,7 +81,39 @@ function print_card(paw, scard)
 {
     var txt = yeGet(scard, "texture")
     var hover_c = ywCanvasNewImgFromTexture(paw, 0, 0, txt, null)
+
     yePushBack(paw, hover_c, "hover_c")
+}
+
+function play_card(paw, scard)
+{
+    var hcan = yeGet(scard, "can")
+    let wc = i_at(scard, "wealth_cost")
+    let cc = i_at(scard, "citizen_cost")
+
+    ywCanvasRemoveObj(paw, hcan)
+    yeRemoveChildByStr(scard, "can")
+    yeRemoveChildByStr(scard, "hidx")
+    print("oh: ", i_at(cp, "wealth"))
+    add_i_at(cp, "wealth", -wc)
+    add_i_at(cp, "citizens", -cc)
+    if (i_at(scard, "type") == 1) {
+	add_i_at(cp, "wealth-turn", i_at(scard, "gen_wealth"))
+    } else if (i_at(scard, "type") == 0) {
+	var fidx = yePush(cpf, scard)
+	let txt = yeGet(scard, "texture")
+
+	var can = ywCanvasNewImgFromTexture(paw, 110 * fidx + 3,
+					    i_at(cp, "field_y"), txt,
+					    null)
+	ywCanvasForceSizeXY(can, CARD_W / 2, CARD_H / 2)
+	ywCanvasRotate(can, card_rotation)
+	ywCanvasSetWeight(paw, can, 0)
+	yeCreateInt(fidx, can, "fidx")
+	yePushBack(scard, can, "can")
+    }
+
+    yeRemoveChildByEntity(cph, scard)
 }
 
 function paw_action(paw, eves)
@@ -88,9 +124,9 @@ function paw_action(paw, eves)
     let turn = i_at(paw, "turn")
     let p0 = yeGet(paw, "p0")
     let p1 = yeGet(paw, "p1")
-    var card_rotation = 0
 
     if (cur_player == 0) {
+	card_rotation = 0
 	cp = p0
     } else {
 	card_rotation = 180
@@ -137,11 +173,20 @@ function paw_action(paw, eves)
 
     if (i_at(paw, "cur_player") == 1) {
 	print("play le mechant")
+	print("AI, yume no ai")
 	add_i_at(paw, "turn", 1)
 	yeSetIntAt(paw, "phase", 0)
 	yeSetIntAt(paw, "cur_player", 0)
 	yuiUsleep(100000)
 	ygUpdateScreen()
+
+	for (var i = 0; i < yeLen(cph); ++i) {
+	    var scard = yeGet(cph, i)
+	    print("playable: ", is_card_playable(scard, wealth))
+	    if (is_card_playable(scard, i_at(cp, "wealth"))) {
+		play_card(paw, scard)
+	    }
+	}
 	return;
     }
 
@@ -175,40 +220,14 @@ function paw_action(paw, eves)
 	print_card(paw, scard)
 
 	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	    let wc = i_at(scard, "wealth_cost")
-	    let cc = i_at(scard, "citizen_cost")
-
 	    if (is_card_playable(scard, wealth)) {
-		var hcan = yeGet(scard, "can")
-		ywCanvasRemoveObj(paw, hcan)
-		yeRemoveChildByStr(scard, "can")
-		yeRemoveChildByStr(scard, "hidx")
-		print("oh: ", i_at(cp, "wealth"))
-		add_i_at(cp, "wealth", -wc)
-		add_i_at(cp, "citizens", -cc)
-		if (i_at(scard, "type") == 1) {
-		    add_i_at(cp, "wealth-turn", i_at(scard, "gen_wealth"))
-		} else if (i_at(scard, "type") == 0) {
-		    var fidx = yePush(cpf, scard)
-		    let txt = yeGet(scard, "texture")
-
-		    print("fidx: ", fidx)
-		    var can = ywCanvasNewImgFromTexture(paw, 110 * fidx + 3,
-							i_at(cp, "field_y"), txt,
-							null)
-		    ywCanvasForceSizeXY(can, CARD_W / 2, CARD_H / 2)
-		    ywCanvasSetWeight(paw, can, 0)
-		    yeCreateInt(fidx, can, "fidx")
-		    yePushBack(scard, can, "can")
-		}
-
-		yeRemoveChildByEntity(cph, scard)
+		play_card(paw, scard)
 	    } else {
 		global_txt += "\n" + non_playable_cause
 	    }
-	    print("must play card :)", wc, cc)
 	}
-    } else if (hover_card != null && yeGet(hover_card, "fidx") != null) {
+    } else if (hover_card != null && yeGet(hover_card, "fidx") != null &&
+	       yeveMouseY() > 300) {
 	var scard = yeGet(cpf, i_at(hover_card, "fidx"))
 
 	print_card(paw, scard)
@@ -218,10 +237,12 @@ function paw_action(paw, eves)
 	    if (i_at(scard, "tap") != 1) {
 		yeSetIntAt(scard, "tap", 1)
 		ywCanvasRotate(can, card_rotation + 90)
-		print("attack !!!!")
 	    }
 	}
-	print("fidx !!!!", i_at(hover_card, "fidx"))
+    } else if (hover_card != null && yeGet(hover_card, "fidx") != null) {
+	var scard = yeGet(yeGet(p1, "field"), i_at(hover_card, "fidx"))
+
+	print_card(paw, scard)
     }
 
     ywCanvasRemoveObj(paw, yeGet(paw, "global_text"))
