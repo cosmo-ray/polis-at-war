@@ -12,6 +12,8 @@ var looser = 0
 
 var non_playable_cause = null
 
+var slash_path = "./slash.png"
+
 function i_at(e, k)
 {
     return yeGetInt(yeGet(e, k))
@@ -22,48 +24,69 @@ function add_i_at(e, k, v)
     yeAddInt(yeGet(e, k), v)
 }
 
+function deprint_card(paw)
+{
+    if (yeGet(paw, "hover_c") != null) {
+	ywCanvasRemoveObj(paw, yeGet(paw, "hover_c"))
+	yeRemoveChildByStr(paw, "hover_c")
+    }
+}
+
+function rm_card(paw, f, c)
+{
+    let can = yeGet(c, "can")
+    let pos = ywCanvasObjPos(can)
+
+    var slash = ywCanvasNewImgByPath(paw, ywPosX(pos), ywPosY(pos),
+				     slash_path);
+    yuiUsleep(300000)
+    ygUpdateScreen()
+    ywCanvasRemoveObj(paw, slash);
+
+    ywCanvasRemoveObj(paw, can)
+    yeRemoveChildByEntity(f, c)
+    yuiUsleep(300000)
+    ygUpdateScreen()
+}
+
 function attack(paw, card)
 {
+    if (i_at(card, "tap") == 1)
+	return
+
     var can = yeGet(card, "can")
 
-    if (i_at(card, "tap") != 1) {
-	yeSetIntAt(card, "tap", 1)
-	ywCanvasRotate(can, card_rotation + 90)
+    deprint_card(paw)
+    yeSetIntAt(card, "tap", 1)
+    ywCanvasRotate(can, card_rotation + 90)
 
-	yuiUsleep(300000)
-	ygUpdateScreen()
+    yuiUsleep(300000)
+    ygUpdateScreen()
 
-	var atk_val = i_at(card, "atk")
-	var def_val = i_at(card, "def")
-	var opf = yeGet(op, "field")
-	var defender = null
+    var atk_val = i_at(card, "atk")
+    var def_val = i_at(card, "def")
+    var opf = yeGet(op, "field")
+    var defender = null
 
-	for (var i = 0; i < yeLen(opf); ++i) {
-	    ocard = yeGet(opf, i)
-	    if (ocard && i_at(ocard, "tap") == 0) {
-		defender = ocard
-		break
-	    }
+    for (var i = 0; i < yeLen(opf); ++i) {
+	ocard = yeGet(opf, i)
+	if (ocard && i_at(ocard, "tap") == 0) {
+	    defender = ocard
+	    break
 	}
+    }
 
-	if (defender == null)
-	    add_i_at(op, "citizens", -atk_val)
-	else {
-	    aat = i_at(defender, "atk")
-	    adt = i_at(defender, "def")
+    if (defender == null)
+	add_i_at(op, "citizens", -atk_val)
+    else {
+	aat = i_at(defender, "atk")
+	adt = i_at(defender, "def")
 
-	    if (aat >= def_val) {
-		ywCanvasRemoveObj(paw, yeGet(card, "can"))
-		yeRemoveChildByEntity(cpf, card)
-		yuiUsleep(300000)
-		ygUpdateScreen()
-	    }
-	    if (atk_val >= adt) {
-		ywCanvasRemoveObj(paw, yeGet(defender, "can"))
-		yeRemoveChildByEntity(opf, defender)
-		yuiUsleep(300000)
-		ygUpdateScreen()
-	    }
+	if (aat >= def_val) {
+	    rm_card(paw, cpf, card)
+	}
+	if (atk_val >= adt) {
+	    rm_card(paw, opf, defender)
 	}
     }
 }
@@ -278,10 +301,7 @@ function paw_action(paw, eves)
 	      yeLastKey(cpd), yeLastKey(cph))
     }
 
-    if (yeGet(paw, "hover_c") != null) {
-	ywCanvasRemoveObj(paw, yeGet(paw, "hover_c"))
-	yeRemoveChildByStr(paw, "hover_c")
-    }
+    deprint_card(paw)
 
     let cols = ywCanvasNewCollisionsArrayWithRectangle(paw, mouse_r)
 
