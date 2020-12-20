@@ -32,21 +32,27 @@ function deprint_card(paw)
     }
 }
 
+function slash(paw, x, y)
+{
+    var slash = ywCanvasNewImgByPath(paw, x, y, slash_path);
+
+    ygUpdateScreen()
+    yuiUsleep(300000)
+    ywCanvasRemoveObj(paw, slash);
+    ygUpdateScreen()
+}
+
 function rm_card(paw, f, c)
 {
     let can = yeGet(c, "can")
     let pos = ywCanvasObjPos(can)
 
-    var slash = ywCanvasNewImgByPath(paw, ywPosX(pos), ywPosY(pos),
-				     slash_path);
-    yuiUsleep(300000)
-    ygUpdateScreen()
-    ywCanvasRemoveObj(paw, slash);
 
+    slash(paw, ywPosX(pos), ywPosY(pos))
     ywCanvasRemoveObj(paw, can)
     yeRemoveChildByEntity(f, c)
-    yuiUsleep(300000)
     ygUpdateScreen()
+    yuiUsleep(300000)
 }
 
 function attack(paw, card)
@@ -60,8 +66,8 @@ function attack(paw, card)
     yeSetIntAt(card, "tap", 1)
     ywCanvasRotate(can, card_rotation + 90)
 
-    yuiUsleep(300000)
     ygUpdateScreen()
+    yuiUsleep(300000)
 
     var atk_val = i_at(card, "atk")
     var def_val = i_at(card, "def")
@@ -76,9 +82,15 @@ function attack(paw, card)
 	}
     }
 
-    if (defender == null)
+    if (defender == null) {
 	add_i_at(op, "citizens", -atk_val)
-    else {
+	print("cur player: !!!! ", i_at(paw, "cur_player"),
+	      i_at(paw, "cur_player") == 1)
+	if (i_at(paw, "cur_player") == 1)
+	    slash(paw, 660, 420)
+	else
+	    slash(paw, 30, 0)
+    } else {
 	aat = i_at(defender, "atk")
 	adt = i_at(defender, "def")
 
@@ -230,8 +242,8 @@ function paw_action(paw, eves)
 	if (turn == 0)
 	    for(var i = 0; i < 5; ++i) {
 		draw_card(paw)
-		yuiUsleep(30000)
 		ygUpdateScreen()
+		yuiUsleep(30000)
 	    }
 	else
 	    draw_card(paw)
@@ -269,9 +281,6 @@ function paw_action(paw, eves)
     if (i_at(paw, "cur_player") == 1) {
 	print("play le mechant")
 	print("AI, yume no ai")
-	add_i_at(paw, "turn", 1)
-	yeSetIntAt(paw, "phase", 0)
-	yeSetIntAt(paw, "cur_player", 0)
 	yuiUsleep(100000)
 	ygUpdateScreen()
 
@@ -292,6 +301,10 @@ function paw_action(paw, eves)
 	}
 
 	yeSetIntAt(cp, "wealth", 0)
+	add_i_at(paw, "turn", 1)
+	yeSetIntAt(paw, "phase", 0)
+	yeSetIntAt(paw, "cur_player", 0)
+
 	return;
     }
 
