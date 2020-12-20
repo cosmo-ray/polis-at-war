@@ -2,10 +2,13 @@ let CARD_W = 200
 let CARD_H = 300
 
 var cp = null
+var op = null
 var cpd = null
 var cph = null
 var cpf = null
 var card_rotation = 0
+
+var looser = 0
 
 var non_playable_cause = null
 
@@ -19,8 +22,59 @@ function add_i_at(e, k, v)
     yeAddInt(yeGet(e, k), v)
 }
 
+function attack(paw, card)
+{
+    var can = yeGet(card, "can")
+
+    if (i_at(card, "tap") != 1) {
+	yeSetIntAt(card, "tap", 1)
+	ywCanvasRotate(can, card_rotation + 90)
+
+	yuiUsleep(300000)
+	ygUpdateScreen()
+
+	var atk_val = i_at(card, "atk")
+	var def_val = i_at(card, "def")
+	var opf = yeGet(op, "field")
+	var defender = null
+
+	for (var i = 0; i < yeLen(opf); ++i) {
+	    ocard = yeGet(opf, i)
+	    if (ocard && i_at(ocard, "tap") == 0) {
+		defender = ocard
+		break
+	    }
+	}
+
+	if (defender == null)
+	    add_i_at(op, "citizens", -atk_val)
+	else {
+	    aat = i_at(defender, "atk")
+	    adt = i_at(defender, "def")
+
+	    if (aat >= def_val) {
+		ywCanvasRemoveObj(paw, yeGet(card, "can"))
+		yeRemoveChildByEntity(cpf, card)
+		yuiUsleep(300000)
+		ygUpdateScreen()
+	    }
+	    if (atk_val >= adt) {
+		ywCanvasRemoveObj(paw, yeGet(defender, "can"))
+		yeRemoveChildByEntity(opf, defender)
+		yuiUsleep(300000)
+		ygUpdateScreen()
+	    }
+	}
+    }
+}
+
 function draw_card(paw)
 {
+    if (yeLen(cpd) == 0) {
+	looser = i_at(paw, "cur_player") + 1
+	return
+    }
+
     var card = yeLast(cpd)
     if(yeNbElems(cph) > 7)
 	return
@@ -128,9 +182,11 @@ function paw_action(paw, eves)
     if (cur_player == 0) {
 	card_rotation = 0
 	cp = p0
+	op = p1
     } else {
 	card_rotation = 180
 	cp = p1
+	op = p0
     }
     cpd = yeGet(cp, "deck")
     cph = yeGet(cp, "hand")
@@ -156,6 +212,22 @@ function paw_action(paw, eves)
 	    }
 	else
 	    draw_card(paw)
+    }
+
+    if (i_at(p0, "citizens") < 1)
+	looser = 2;
+    else if (i_at(p1, "citizens") < 1)
+	looser = 1;
+
+    if (looser > 0) {
+	let txt = "Player " + (looser - 1) + " WIN !!!"
+	ywCanvasNewTextByStr(paw, 200, 200, txt)
+	ywCanvasNewTextByStr(paw, 200, 260, txt)
+	ywCanvasNewTextByStr(paw, 200, 340, txt)
+	ygUpdateScreen()
+	yuiUsleep(2000000)
+	yesCall(ygGet("FinishGame"))
+	return;
     }
 
     /* unkeep */
@@ -187,6 +259,16 @@ function paw_action(paw, eves)
 		play_card(paw, scard)
 	    }
 	}
+
+	for (var i = 0; i < yeLen(cpf); ++i) {
+	    var card = yeGet(cpf, i)
+
+	    if (card && i_at(card, "tap") < 1 && yuiRand() & 1) {
+		attack(paw, card)
+	    }
+	}
+
+	yeSetIntAt(cp, "wealth", 0)
 	return;
     }
 
@@ -207,6 +289,7 @@ function paw_action(paw, eves)
 	if (yeGet(c, "turn-end") && yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
 	    yeSetIntAt(paw, "phase", 0)
 	    yeSetIntAt(paw, "cur_player", 1)
+	    yeSetIntAt(cp, "wealth", 0)
 	    return
 	}
     }
@@ -232,12 +315,7 @@ function paw_action(paw, eves)
 
 	print_card(paw, scard)
 	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	    var can = yeGet(scard, "can")
-
-	    if (i_at(scard, "tap") != 1) {
-		yeSetIntAt(scard, "tap", 1)
-		ywCanvasRotate(can, card_rotation + 90)
-	    }
+	    attack(paw, scard)
 	}
     } else if (hover_card != null && yeGet(hover_card, "fidx") != null) {
 	var scard = yeGet(yeGet(p1, "field"), i_at(hover_card, "fidx"))
@@ -384,7 +462,7 @@ function paw_init(paw)
     ywCanvasRotate(back_c, 180)
     yePushBack(p, back_c, "deck_c")
     yeCreateInt(10, p, "hand_y")
-    yeCreateInt(40, p, "field_y")
+    yeCreateInt(130, p, "field_y")
 
     p = create_player(paw, "p0", deck)
     yeCreateInt(420, p, "hand_y")
