@@ -261,7 +261,10 @@ function paw_action(paw, eves)
 	ywCanvasNewTextByStr(paw, 200, 340, txt)
 	ygUpdateScreen()
 	yuiUsleep(2000000)
-	yesCall(ygGet("FinishGame"))
+	if (yeGet(paw, "quit"))
+	    yesCall(yeGet(paw, "quit"), paw)
+	else
+	    yesCall(ygGet("FinishGame"))
 	return;
     }
 
@@ -455,8 +458,15 @@ function create_player(paw, name, deck)
     return p
 }
 
+function paw_destroy(paw)
+{
+    ygModDirOut();
+}
+
 function paw_init(paw)
 {
+    ygModDir("polis-at-war");
+    yeCreateFunction(paw_destroy, paw, "destroy")
     yeCreateFunction(paw_action, paw, "action")
     yeCreateString("rgba: 255 255 255 255", paw, "background")
     var cards = ygFileToEnt(YJSON, "./cards.json")
