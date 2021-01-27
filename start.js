@@ -15,10 +15,21 @@
  */
 
 /* 
- * I've try to use this file as an example who to use my engine with js and canvas
+ * I've try to use this file as an example how to use my engine with js and canvas.
  * most of my engine use an abstract type call entity, that are use to represent any kind of data
  * and are used everywhere in my engine and games.
- * Stat reading at mod_init so at the end of the file :)
+ * The engine also have a widget system, where everything on screen is a widget.
+ * API documentation are still in the C header, you can find at:
+ * https://github.com/cosmo-ray/yirl/blob/master/include/yirl
+ * For this files most of the function used came from:
+ * widget.h : widgets manipulation (not used too much in this file)
+ * canvas.h : canvas manipulation, use for most thing you see on screen
+ * entity.h : entity manipulation
+ * game.h : global game bahavior, and refresh every widgets
+ * pos.h: create and manipulate pos(X/Y) and Size(W/H)
+ * rect.h: create and manipulate rect
+ * texture.h: rendable elements (that are not rend yet) used to create card
+ * Stat reading the code at mod_init so at the end of the file :)
  */
 
 let CARD_W = 200 /* card width in pixiel, why are you still reading this you should go tp mod_init */
