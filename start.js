@@ -52,6 +52,9 @@ function i_at(e, k)
 /* 
  * Addition an integer to an element of an array entity
  * like e[k] += v but e is an entity.
+ * we can't directly use e[k], because js binding try to 1/1 binding with C functions
+ * it should be posible to have an orianted object wrapper of YIRL API. but it need to be done,
+ * and it need to be done diferently for each scripting languages
  */
 function add_i_at(e, k, v)
 {
