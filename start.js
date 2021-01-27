@@ -37,16 +37,26 @@ var non_playable_cause = null
 
 var slash_path = "./slash.png"
 
+/*
+ * simple helper: yeGetInt, get number from an Int Entity
+ * yeGet: get sub entity of an array entity
+ * this function get an integer from an elements of an array
+ */
 function i_at(e, k)
 {
     return yeGetInt(yeGet(e, k))
 }
 
+/* 
+ * Addition an integer to an element of an array entity
+ * like e[k] += v but e is an entity.
+ */
 function add_i_at(e, k, v)
 {
     yeAddInt(yeGet(e, k), v)
 }
 
+/* remove "hover_c" from screen and paw widget entity */
 function deprint_card(paw)
 {
     if (yeGet(paw, "hover_c") != null) {
@@ -55,6 +65,7 @@ function deprint_card(paw)
     }
 }
 
+/* show a slash on screen, wait and remove it */
 function slash(paw, x, y)
 {
     /* create canvas obj using slash_path */
@@ -69,19 +80,30 @@ function slash(paw, x, y)
     ygUpdateScreen()
 }
 
+/* remove card from battle field and screen */
 function rm_card(paw, f, c)
 {
+    /* get canvas obj from card */
     let can = yeGet(c, "can")
+    /* get pos */
     let pos = ywCanvasObjPos(can)
 
-
+    /* show a slash to explicit the card attack */
     slash(paw, ywPosX(pos), ywPosY(pos))
+    /* remove object from screen */
     ywCanvasRemoveObj(paw, can)
+    /* remove card entity from field entity */
     yeRemoveChildByEntity(f, c)
+    /* update screen */
     ygUpdateScreen()
     yuiUsleep(300000)
 }
 
+/* try to attack with a card */
+/* if the card is tap, return */
+/* else try to find if the oponent have an untap card */
+/* if so attack the untap card */
+/* else go for the eye... enemy life, Boo...m (but I'm listening to BG ost) */
 function attack(paw, card)
 {
     if (i_at(card, "tap") == 1)
@@ -232,6 +254,22 @@ function play_card(paw, scard)
     yeRemoveChildByEntity(cph, scard)
 }
 
+/* this function is automatically called by YIRL,
+ * there is 2 paradigme YIRL can use to rend object:
+ *
+ * 1rst is to use how widget should work:
+ * each widgets have an action callbback, which take in parameters game events
+ * modify what the widget sould print.
+ * all callbacks are called then YIRL print all widgets, and re call the callback
+ * (basically YIRL have a loop that call, action callbacks and print everything)
+ *
+ * 2nd paradigme: 1 widget take ownershit of the screen:
+ * the action callback is called a first time, but them the callback doesn't
+ * return durring all the widget lifecycle and monopolise the screen.
+ * this widget do kind of an old mix of both:
+ * it monopolise the screen durring enemy turn, and when animation happen,
+ * but use the normal way of returning to get events
+ */
 function paw_action(paw, eves)
 {
     let mouse_r = ywRectCreateInts(yeveMouseX(), yeveMouseY(), 1, 1)
@@ -406,7 +444,7 @@ function mk_card_back(father, name)
 }
 
 /*
-m * This function should be callable from outside of the module
+ * This function should be callable from outside of the module
  * Take a card description and return create image in it
  */
 function mk_card(card, card_name)
