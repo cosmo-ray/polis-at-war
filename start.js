@@ -15,7 +15,8 @@
  */
 
 /* 
- * I've try to use this file as an example how to use my engine with js and canvas.
+ * I've try to comment this file so it can be use as an example/tuto
+ * how to use my engine with js and canvas. (note that I usually comment a lot less)
  * most of my engine use an abstract type call entity, that are use to represent any kind of data
  * and are used everywhere in my engine and games.
  * small detail array entity elements, can be access using integer or string as key
@@ -637,11 +638,13 @@ function create_player(paw, name, deck)
     /* create a copy of deck (the function parameter) */
     var cp_deck = yeCreateCopy(deck)
     var tot_cards = 0
+    /* coune the total nuumber of cards in the deck */
     for (i = 0; i < yeLen(cp_deck); ++i) {
 	var cards_nb = yeGet(cp_deck, i)
 	tot_cards += yeGetInt(cards_nb)
     }
 
+    /* generate al card, and they position in the deck */
     while (tot_cards > 0) {
 	var deck_idx = yuiRand() % yeLen(cp_deck)
 	var cards_nb = yeGet(cp_deck, deck_idx)
