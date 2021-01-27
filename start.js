@@ -72,7 +72,11 @@ function add_i_at(e, k, v)
     yeAddInt(yeGet(e, k), v)
 }
 
-/* remove "hover_c" from screen and paw widget entity */
+/* 
+ * remove "hover_c" from screen and paw widget entity
+ * hover_c is the card show in big when you have
+ * your mouse over a card on the field
+ */
 function deprint_card(paw)
 {
     if (yeGet(paw, "hover_c") != null) {
@@ -125,9 +129,13 @@ function attack(paw, card)
     if (i_at(card, "tap") == 1)
 	return
 
+    /* get card canvas */
     var can = yeGet(card, "can")
 
+    /* remove useless info on screen (it time to fight now) */
     deprint_card(paw)
+
+    /* tap the card */
     yeSetIntAt(card, "tap", 1)
     ywCanvasRotate(can, card_rotation + 90)
 
@@ -136,9 +144,11 @@ function attack(paw, card)
 
     var atk_val = i_at(card, "atk")
     var def_val = i_at(card, "def")
+    /* get other player field (so that guy under attack) */
     var opf = yeGet(op, "field")
     var defender = null
 
+    /* try to find an untap defenders in enemy field */
     for (var i = 0; i < yeLen(opf); ++i) {
 	ocard = yeGet(opf, i)
 	if (ocard && i_at(ocard, "tap") == 0) {
