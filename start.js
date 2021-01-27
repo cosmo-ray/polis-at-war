@@ -1,3 +1,26 @@
+
+/**        DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ *                   Version 2, December 2004
+ *
+ * Copyright (C) 2021 Matthias Gatto <matthias.gatto@protonmail.com>
+ *
+ * Everyone is permitted to copy and distribute verbatim or modified
+ * copies of this license document, and changing it is allowed as long
+ * as the name is changed.
+ *
+ *            DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE
+ *  TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION
+ *
+ *  0. You just DO WHAT THE FUCK YOU WANT TO.
+ */
+
+/* 
+ * I've try to use this file as an example who to use my engine with js and canvas
+ * most of my engine use an abstract type call entity, that are use to represent any kind of data
+ * and are used everywhere in my engine and games.
+ * Stat reading at mod init :)
+ */
+
 let CARD_W = 200
 let CARD_H = 300
 
@@ -463,22 +486,37 @@ function paw_destroy(paw)
     ygModDirOut();
 }
 
+/* take the widget array entity, and init it */
 function paw_init(paw)
 {
+    /* go to the module directory, useful to use images dynamoc paths */
     ygModDir("polis-at-war");
+    /* create destroy and action function the widget */
     yeCreateFunction(paw_destroy, paw, "destroy")
     yeCreateFunction(paw_action, paw, "action")
+    /* set background color, note, that background could have an image path too */
     yeCreateString("rgba: 255 255 255 255", paw, "background")
+    /* load the json containing the cards description into cards variable */
     var cards = ygFileToEnt(YJSON, "./cards.json")
+    /* push cards into the widget */
     yePushBack(paw, cards, "cards")
+    /* load the deck descriptions */
     var deck = ygFileToEnt(YJSON, "./greek_deck.json")
 
+    /* create the entity, tell YIRL the entity is based on the canvas type
+     * (so yirl will call canvas init internaly) */
     ret = ywidNewWidget(paw, "canvas")
+     /* enable weight on the widget, otherwise we couldn't choose which object is on top of another */
     ywCanvasEnableWeight(paw)
+    
+    /* create a line that server as separation for the players */
     ywCanvasNewRectangle(paw, 0, 300, 800, 1, "rgba: 0 0 0 100")
+
+    /* init all cards */
     for (i = 0; i < yeLen(cards); ++i) {
 	let img_path = yeGetKeyAt(cards, i) + ".png"
 	mk_card(yeGet(cards, i), yeGetKeyAt(cards, i))
+	/* debug print */
 	var img = null
 	var imgt = yeGet(yeGet(cards, i), "texture")
 
@@ -488,32 +526,47 @@ function paw_init(paw)
 
 
     }
+    /* get widget pixiel size from widget array entity */
     var wid_size = yeGet(paw, "wid-pix")
+    /* get height and width from wid_size */
     var wid_h = ywRectH(wid_size)
     var wid_w = ywRectW(wid_size)
+    /* create back of the card texture */
     let back = mk_card_back()
     var sz = ywSizeCreate(CARD_W / 2, CARD_H / 2)
 
+    /* init some value and push thoses into the widget entity */
     yeCreateInt(0, paw, "turn")
     yeCreateInt(0, paw, "phase")
     yeCreateInt(0, paw, "cur_player")
 
+    /* create p1 (the bad guy) return an entity entity that have been push into paw */
     var p = create_player(paw, "p1", deck)
 
+    /*
+     * create a printable object from back (which is a texture)
+     * Position of the object are x: 30, y: 0, it reprsent the deck of the player
+     */
     var back_c = ywCanvasNewImgFromTexture(paw, 30, 0, back, null)
+    /* set the size of the object */
     ywCanvasForceSize(back_c, sz)
+    /* U turn */
     ywCanvasRotate(back_c, 180)
+    /* push the canvas obj into player entity, so it will be easier to manipulate it */
     yePushBack(p, back_c, "deck_c")
     yeCreateInt(10, p, "hand_y")
     yeCreateInt(130, p, "field_y")
 
+    /* create the good guy */
     p = create_player(paw, "p0", deck)
     yeCreateInt(420, p, "hand_y")
     yeCreateInt(310, p, "field_y")
     back_c = ywCanvasNewImgFromTexture(paw, 660, 420, back, null)
     ywCanvasForceSize(back_c, sz)
     yePushBack(p, back_c, "deck_c")
+    /* ^ same as for the bag guy, but for the good guy */
 
+    /* Create a rectangle, and a text canvas object, in order to create a butter to end turn */
     var end_turn = ywCanvasNewRectangle(paw, 700, 10, 80, 80, "rgba: 255 0 0 190")
     ywCanvasNewTextByStr(paw, 700, 35, "End Turn")
     yeCreateInt(1, end_turn, "turn-end")
@@ -521,13 +574,31 @@ function paw_init(paw)
     return ret;
 }
 
+/* module starting point
+ * mod is an array entity representing the module
+ */
 function mod_init(mod)
 {
+   /*
+    * create an array entity that will be use to define a new
+    * type of widget call "polis-at-war"
+    */
     var paw = yeCreateArray()
 
+    /*
+     * create a function entity that have as value the js function "paw_init"
+     * push it into paw array, with "callback" as key
+     */
     yeCreateFunction(paw_init, paw, "callback")
+     /* create an entity string "polis-at-war", push it into paw, "name" as array key */
     yeCreateString("polis-at-war", paw, "name")
+     /* Crappy internal uglyness */
     yeIncrRef(paw)
+     /* tell YIRL that a new sub widget type existe
+      * it's define by paw variable
+      * the new type is call "polis-at-war", and when a widget of that sub-type
+      * is created paw_init is called to init the widget
+      */
     ywidAddSubType(paw)
 
     var sw = yeCreateArray(mod, "starting widget")
@@ -536,5 +607,11 @@ function mod_init(mod)
     var sz = ywSizeCreate(800, 600)
 
     yePushBack(mod, sz, "window size")
+    /* 
+     * above lines that push stuff into 'mob' init the mod array entity
+     * json form of mod should now be:
+     * { "starting widget" : {"<type>": "polis-at-war"}, "window size": [800, 600] }
+     */
+	
     return mod
 }
