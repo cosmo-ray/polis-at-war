@@ -18,11 +18,11 @@
  * I've try to use this file as an example who to use my engine with js and canvas
  * most of my engine use an abstract type call entity, that are use to represent any kind of data
  * and are used everywhere in my engine and games.
- * Stat reading at mod init so at the end of the file :)
+ * Stat reading at mod_init so at the end of the file :)
  */
 
-let CARD_W = 200
-let CARD_H = 300
+let CARD_W = 200 /* card width in pixiel, why are you still reading this you should go tp mod_init */
+let CARD_H = 300 /* card height in pixiel, GO TO mod_init */
 
 /* thoses helper are set and used in paw_action (and sub function called by it) */
 var cp = null /* current player */
@@ -618,7 +618,7 @@ function paw_init(paw)
     ywCanvasNewTextByStr(paw, 700, 35, "End Turn")
     yeCreateInt(1, end_turn, "turn-end")
 
-    return ret;
+    return ret; /* now go to paw_action, it will be automatically called by YIRL */
 }
 
 /* module starting point
@@ -659,6 +659,5 @@ function mod_init(mod)
      * json form of mod should now be:
      * { "starting widget" : {"<type>": "polis-at-war"}, "window size": [800, 600] }
      */
-	
-    return mod
+    return mod /* now go to paw_init, it will be automatically called by YIRL */
 }
