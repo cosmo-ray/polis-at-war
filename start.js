@@ -18,22 +18,23 @@
  * I've try to use this file as an example who to use my engine with js and canvas
  * most of my engine use an abstract type call entity, that are use to represent any kind of data
  * and are used everywhere in my engine and games.
- * Stat reading at mod init :)
+ * Stat reading at mod init so at the end of the file :)
  */
 
 let CARD_W = 200
 let CARD_H = 300
 
-var cp = null
-var op = null
-var cpd = null
-var cph = null
-var cpf = null
-var card_rotation = 0
+/*  */
+var cp = null /* current player */
+var op = null /* other player */
+var cpd = null /* current player deck */
+var cph = null /* current player hand */
+var cpf = null /* current player field */
+var card_rotation = 0 /* 0 for player, 180 for enemy, is set at turn start */
 
-var looser = 0
+var looser = 0 /* who lose (0 no one) */
 
-var non_playable_cause = null
+var non_playable_cause = null /* string that store why a card can't be played */
 
 var slash_path = "./slash.png"
 
@@ -41,6 +42,7 @@ var slash_path = "./slash.png"
  * simple helper: yeGetInt, get number from an Int Entity
  * yeGet: get sub entity of an array entity
  * this function get an integer from an elements of an array
+ * @return interger value of sub elemt of e at k 
  */
 function i_at(e, k)
 {
