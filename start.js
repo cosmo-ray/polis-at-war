@@ -24,7 +24,7 @@
 let CARD_W = 200
 let CARD_H = 300
 
-/*  */
+/* thoses helper are set and used in paw_action (and sub function called by it) */
 var cp = null /* current player */
 var op = null /* other player */
 var cpd = null /* current player deck */
