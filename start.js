@@ -57,10 +57,14 @@ function deprint_card(paw)
 
 function slash(paw, x, y)
 {
+    /* create canvas obj using slash_path */
     var slash = ywCanvasNewImgByPath(paw, x, y, slash_path);
 
+    /* ask YIRL to rend all widget (and thefore print objects that have been push to the canvas) */
     ygUpdateScreen()
+    /* wait */
     yuiUsleep(300000)
+    /* remove the image and reprint all */
     ywCanvasRemoveObj(paw, slash);
     ygUpdateScreen()
 }
