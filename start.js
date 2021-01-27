@@ -157,18 +157,22 @@ function attack(paw, card)
 	}
     }
 
+    /* if no defenders, then we remove citizens (which are life in this game) */
     if (defender == null) {
 	add_i_at(op, "citizens", -atk_val)
 	print("cur player: !!!! ", i_at(paw, "cur_player"),
 	      i_at(paw, "cur_player") == 1)
+	/* slash the attacked player deck */
 	if (i_at(paw, "cur_player") == 1)
 	    slash(paw, 660, 420)
 	else
 	    slash(paw, 30, 0)
     } else {
+	/* get attack and defend value of attacked card */
 	aat = i_at(defender, "atk")
 	adt = i_at(defender, "def")
 
+	/* kill other card if attack > def, both cards can die */
 	if (aat >= def_val) {
 	    rm_card(paw, cpf, card)
 	}
@@ -180,41 +184,55 @@ function attack(paw, card)
 
 function draw_card(paw)
 {
+    /* if all card have been draw, the player lose  */
     if (yeLen(cpd) == 0) {
 	looser = i_at(paw, "cur_player") + 1
 	return
     }
 
+    /* get last card from deck */
     var card = yeLast(cpd)
+    /* if hand is full return */
     if(yeNbElems(cph) > 7)
 	return
+    /* get card name (which is the array key) */
     var name = yeLastKey(cpd)
-    var hidx = yePush(cph, card, yeLastKey(cpd))
+    /* push card into hand, use name as key */
+    var hidx = yePush(cph, card, name)
     var x = 30
     var angle = 0
     var wm = 1
+    /* remove last card from deck */
     yePopBack(cpd)
 
+    /*
+     * depeding of whatever it's the player or the enemy,
+     * get texture of the back of the card, or the front,
+     * and give the good angle to the card
+     */
     let txt = null
     if (i_at(paw, "cur_player") == 0) {
-	txt = yeGet(card, "texture")
+	txt = yeGet(card, "texture") /* get card texture */
 	angle = 10 * hidx - 30
     } else {
 	angle = 210 - 15 * hidx
-	txt = mk_card_back()
+	txt = mk_card_back() /* card back texture */
 	x += 400
 	wm = -1
     }
+    /* make canvas object from texture */
     var can = ywCanvasNewImgFromTexture(paw, x + 30 * hidx,
 					i_at(cp, "hand_y"), txt,
 					null)
-    ywCanvasRotate(can, angle)
+    ywCanvasRotate(can, angle) /* rotate */
+    /* set size */
     ywCanvasForceSizeXY(can, CARD_W / 2, CARD_H / 2)
     print("weight: ", x + 30 * hidx)
+    /* set the card so it appear above card on the field */
     ywCanvasSetWeight(paw, can, (hidx + 1) * wm)
-    yePushBack(card, can, "can")
-    yeCreateInt(hidx, can, "hidx")
-    yeCreateString(name, card, "name")
+    yePushBack(card, can, "can") /* push the canvas obj in the card */
+    yeCreateInt(hidx, can, "hidx") /* push the hand int index of the card in the canvas */
+    yeCreateString(name, card, "name") /* name of the card in the card */
     ygUpdateScreen()
 }
 
@@ -227,6 +245,10 @@ function phase_to_str(phase)
     return "unknow phase"
 }
 
+/*
+ * check if a card can be played, and set the reason
+ * why it can in non_playable_cause
+ */
 function is_card_playable(scard, wealth)
 {
     if (scard == null)
@@ -241,6 +263,11 @@ function is_card_playable(scard, wealth)
     return wc <= wealth
 }
 
+/*
+ * printf a big version of the card, on top left of the widget
+ * call hover, because this function should be call when
+ * the mouse is over a card
+ */
 function print_card(paw, scard)
 {
     var txt = yeGet(scard, "texture")
@@ -249,6 +276,7 @@ function print_card(paw, scard)
     yePushBack(paw, hover_c, "hover_c")
 }
 
+/* play a card (from hand to field) */
 function play_card(paw, scard)
 {
     var hcan = yeGet(scard, "can")
@@ -298,13 +326,19 @@ function play_card(paw, scard)
  */
 function paw_action(paw, eves)
 {
+    /*
+     * create a retangle entity, that corespond to mouse cursor (with a size of 1,1)
+     * this rectangle will be used to check colision with a card in the hand
+     */
     let mouse_r = ywRectCreateInts(yeveMouseX(), yeveMouseY(), 1, 1)
+    /* store information in the paw widgets into js variables */
     let phase = i_at(paw, "phase")
     let cur_player = i_at(paw, "cur_player")
     let turn = i_at(paw, "turn")
     let p0 = yeGet(paw, "p0")
     let p1 = yeGet(paw, "p1")
 
+    /* set some global variables depending on who's playing */
     if (cur_player == 0) {
 	card_rotation = 0
 	cp = p0
@@ -317,8 +351,11 @@ function paw_action(paw, eves)
     cpd = yeGet(cp, "deck")
     cph = yeGet(cp, "hand")
     cpf = yeGet(cp, "field")
+    
+    /* set some js variable from current player */
     var wealth = i_at(cp, "wealth")
     var citizens = i_at(cp, "citizens")
+    /* global txt is use to give game info to the player */
     var global_txt = "Turn: " + turn + " Player: " + cur_player +
 	" " + phase_to_str(phase) +
 	"\nGood Guy: Wealth: " + i_at(p0, "wealth") +
@@ -328,11 +365,13 @@ function paw_action(paw, eves)
 	" Pop: " + i_at(p1, "citizens") +
 	" Income: " + i_at(p1, "wealth-turn")
 
-
+    /* phase == 0 mean unkeep */
     if (phase == 0) {
+	/* if it's first turn, draw 7 card, 1 otherwise */
 	if (turn == 0)
 	    for(var i = 0; i < 5; ++i) {
 		draw_card(paw)
+		/* small sleep so you draw you card 1 by 1 */
 		ygUpdateScreen()
 		yuiUsleep(30000)
 	    }
@@ -340,27 +379,32 @@ function paw_action(paw, eves)
 	    draw_card(paw)
     }
 
+    /* if a city (player) run out of citizen (life), he die */
     if (i_at(p0, "citizens") < 1)
 	looser = 2;
     else if (i_at(p1, "citizens") < 1)
 	looser = 1;
 
+    /* if looser is not 0, we have a winner */
     if (looser > 0) {
+	 /* print who win, wait and quit */
 	let txt = "Player " + (looser - 1) + " WIN !!!"
 	ywCanvasNewTextByStr(paw, 200, 200, txt)
 	ywCanvasNewTextByStr(paw, 200, 260, txt)
 	ywCanvasNewTextByStr(paw, 200, 340, txt)
 	ygUpdateScreen()
 	yuiUsleep(2000000)
+	/* if the widget entity contain an element call "quit" */
 	if (yeGet(paw, "quit"))
-	    yesCall(yeGet(paw, "quit"), paw)
+	    yesCall(yeGet(paw, "quit"), paw) /* this callback is used to destroy the widget */
 	else
-	    yesCall(ygGet("FinishGame"))
+	    yesCall(ygGet("FinishGame")) /* kill YIRL othervise */
 	return;
     }
 
     /* unkeep */
     if (phase == 0) {
+	/* untap all card */
 	for (var i = 0; i < yeLen(cpf); ++i) {
 	    let card = yeGet(cpf, i)
 
@@ -368,16 +412,19 @@ function paw_action(paw, eves)
 	    let can = yeGet(card, "can")
 	    ywCanvasRotate(can, card_rotation)
 	}
+	/* give wheal to current player, and increase phase */
 	add_i_at(cp, "wealth", i_at(cp, "wealth-turn"))
 	add_i_at(paw, "phase", 1)
     }
 
+    /* if it's bad guy turn, do AI */
     if (i_at(paw, "cur_player") == 1) {
 	print("play le mechant")
 	print("AI, yume no ai")
 	yuiUsleep(100000)
 	ygUpdateScreen()
 
+	/* play every card, the bad guy can play from his hand */
 	for (var i = 0; i < yeLen(cph); ++i) {
 	    var scard = yeGet(cph, i)
 	    print("playable: ", is_card_playable(scard, wealth))
@@ -386,6 +433,7 @@ function paw_action(paw, eves)
 	    }
 	}
 
+	/* for each card on the fiel, trow a 2 face dice, if 1, attack ! */
 	for (var i = 0; i < yeLen(cpf); ++i) {
 	    var card = yeGet(cpf, i)
 
@@ -394,68 +442,106 @@ function paw_action(paw, eves)
 	    }
 	}
 
+	/* you can't accumulate whealth over turn */
 	yeSetIntAt(cp, "wealth", 0)
-	add_i_at(paw, "turn", 1)
-	yeSetIntAt(paw, "phase", 0)
-	yeSetIntAt(paw, "cur_player", 0)
+	add_i_at(paw, "turn", 1) /* increase turn number by one */
+	yeSetIntAt(paw, "phase", 0) /* unkeep phase */
+	yeSetIntAt(paw, "cur_player", 0) /* set current player to 0 */
 
-	return;
+	return; /* END of AI, return, it's now player turn */
     }
 
+    /* if an events of type mouse down (click) occure
+     * and the mouse position colide with the current player deck
+     * print: "deck click" with len of player deck, enemy deck, and next card name
+     * yeap, the one paying in a terminal can shit
+     */
     if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1) &&
 	ywCanvasCheckColisionsRectObj(mouse_r, yeGet(cp, "deck_c"))) {
 	print("deck click !", yeLen(cpd), yeLen(cph),
 	      yeLastKey(cpd), yeLastKey(cph))
     }
 
+    /* in case a card was hover, it's now remove from the screen */
     deprint_card(paw)
 
+    /* get an entity array of all canvas objects that colide with mouse */
     let cols = ywCanvasNewCollisionsArrayWithRectangle(paw, mouse_r)
 
+    /* for each of the objects that colide with mouse: store cols[i] in c */
     for (var i = 0; (c = yeGet(cols, i)) != null; ++i) {
+	/* if c contain a field call "turn-end" then ther's a click on the "turn-end" rectangle */
 	if (yeGet(c, "turn-end") && yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
-	    yeSetIntAt(paw, "phase", 0)
-	    yeSetIntAt(paw, "cur_player", 1)
-	    yeSetIntAt(cp, "wealth", 0)
+	    yeSetIntAt(paw, "phase", 0) /* unkeep phase */
+	    yeSetIntAt(paw, "cur_player", 1) /* current player is bad player */
+	    yeSetIntAt(cp, "wealth", 0) /* reset wealth (don't accumulate) */
 	    return
 	}
     }
 
+    /* get the card the most on top of the screen under the mouse */
+    /* so if the mouse is over a card on the field and 1 in the hand */
+    /* only the one in the hand will be manipulate */
     let hover_card = yeLast(cols)
 
+    /* if hover card exist, contain a fiel "hidx" and */
+    /* mouse is in the bottom of the screen */
+    /* then it mean the mouse if over a card in player hand */
     if (hover_card != null && yeGet(hover_card, "hidx") != null &&
 	yeveMouseY() > 300) {
+	/* This one is a little tricky: */
+	/* hover_card is not the entity of the card, */ 
+	/* but the entity of the canvas object of the card */
+	/* so the thing that can be print on screen by yirl */
+	/* when we push this canvas obj in the screen (in draw_card function) */
+	/* we push an integer in the canvas obj */
+	/* that int serve as index of the real card in the hand */
+	/* we could have push the card in the canvas object directly */
+	/* but that would have create a circular reference */
+	/* which are allow, but require manual operation to avoid a leak */
 	var scard = yeGet(cph, i_at(hover_card, "hidx"))
 
+	/* print a big version of this card, so the player have more information */
+	/* about the card under his mouse */
 	print_card(paw, scard)
 
+	/* if a click have been made the card under the mouse is played */
 	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
 	    if (is_card_playable(scard, wealth)) {
 		play_card(paw, scard)
 	    } else {
 		global_txt += "\n" + non_playable_cause
 	    }
-	}
+	} /* same check as for card in the hand, but for card on the field */
     } else if (hover_card != null && yeGet(hover_card, "fidx") != null &&
 	       yeveMouseY() > 300) {
+	 /* same trick as with hidx but with fidx (field idx) */
 	var scard = yeGet(cpf, i_at(hover_card, "fidx"))
 
+	/* print zoomed version of the card */
 	print_card(paw, scard)
+	/* if click, try to attack */
 	if (yevCheckKeys(eves, YKEY_MOUSEDOWN, 1)) {
 	    attack(paw, scard)
 	}
+    /* if the mouse is over a card in the enemy field, we print a bog version of it */
     } else if (hover_card != null && yeGet(hover_card, "fidx") != null) {
 	var scard = yeGet(yeGet(p1, "field"), i_at(hover_card, "fidx"))
 
 	print_card(paw, scard)
     }
 
+    /* remove old global info from screen */
     ywCanvasRemoveObj(paw, yeGet(paw, "global_text"))
+    /* remove the field "global_text" from widget entity */
     yeRemoveChildByStr(paw, "global_text")
+    /* push global_txt (which contain actual global info) into screen */
     let global_txt_c = ywCanvasNewTextByStr(paw, 200, 0, global_txt)
+    /* and into paw widget entity in the fiel "global_text" */
     yePushBack(paw, global_txt_c, "global_text")
 }
 
+/* create back card texture */
 function mk_card_back(father, name)
 {
     let sz = ywSizeCreate(CARD_W, CARD_H)
@@ -471,7 +557,7 @@ function mk_card_back(father, name)
 
 /*
  * This function should be callable from outside of the module
- * Take a card description and return create image in it
+ * Take a card description and return create image of it
  */
 function mk_card(card, card_name)
 {
